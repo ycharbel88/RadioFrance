@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.composeCompiler)
+    alias(libs.plugins.ktlint)
 }
 
 kotlin {
@@ -51,4 +52,10 @@ android {
     buildFeatures {
         compose = true
     }
+}
+ktlint {
+    version = libs.versions.ktlint
+    // Skip generated sources (BuildKonfig, Compose resources). We use
+    // invariantSeparatorsPath because on Windows the raw path contains backslashes.
+    filter { exclude { it.file.invariantSeparatorsPath.contains("/build/") } }
 }

@@ -1,3 +1,9 @@
+// core:player: the `AudioPlayer` interface and its platform implementations
+// (Media3 on Android; for now an `UnavailableAudioPlayer` stub on iOS).
+// Why a module: playback outlives the screen (background, notification, lock
+// screen) and has to be testable with a fake. The UI only ever sees the interface.
+// Rule: knows nothing about UI or Compose. Depends on core:model only.
+
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 // Same KMP + Android-library setup in every module, duplicated on purpose.
@@ -6,6 +12,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidMultiplatformLibrary)
+    alias(libs.plugins.ktlint)
 }
 
 kotlin {
@@ -25,4 +32,11 @@ kotlin {
             implementation(projects.core.model)
         }
     }
+}
+
+ktlint {
+    version = libs.versions.ktlint
+    // Skip generated sources (BuildKonfig, Compose resources). We use
+    // invariantSeparatorsPath because on Windows the raw path contains backslashes.
+    filter { exclude { it.file.invariantSeparatorsPath.contains("/build/") } }
 }

@@ -1,0 +1,4 @@
+# LF everywhere so ktlint (end_of_line = lf) and the macOS/Linux CI see the same
+# bytes as a Windows checkout, whatever core.autocrlf says.
+* text=auto eol=lf
+*.bat text eol=crlf

@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.androidMultiplatformLibrary)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
+    alias(libs.plugins.ktlint)
 }
 
 kotlin {
@@ -69,4 +70,10 @@ kotlin {
 
 dependencies {
     androidRuntimeClasspath(libs.compose.uiTooling)
+}
+ktlint {
+    version = libs.versions.ktlint
+    // Skip generated sources (BuildKonfig, Compose resources). We use
+    // invariantSeparatorsPath because on Windows the raw path contains backslashes.
+    filter { exclude { it.file.invariantSeparatorsPath.contains("/build/") } }
 }
