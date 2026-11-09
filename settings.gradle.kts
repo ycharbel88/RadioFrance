@@ -1,4 +1,5 @@
 rootProject.name = "RadioFrance"
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 pluginManagement {
     repositories {
@@ -29,3 +30,8 @@ dependencyResolutionManagement {
 
 include(":androidApp")
 include(":shared")
+include(":core:model")
+include(":core:network")
+include(":core:player")
+include(":core:designsystem")
+include(":feature:stations")

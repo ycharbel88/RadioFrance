@@ -1,0 +1,32 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
+// Same KMP + Android-library setup in every module, duplicated on purpose.
+// Next step when modules multiply: build-logic convention plugins.
+plugins {
+    alias(libs.plugins.kotlinMultiplatform)
+    alias(libs.plugins.androidMultiplatformLibrary)
+    alias(libs.plugins.composeMultiplatform)
+    alias(libs.plugins.composeCompiler)
+}
+
+kotlin {
+    android {
+        namespace = "com.chy.radiofrance.feature.stations"
+        compileSdk = libs.versions.android.compileSdk.get().toInt()
+        minSdk = libs.versions.android.minSdk.get().toInt()
+        compilerOptions {
+            jvmTarget = JvmTarget.JVM_11
+        }
+    }
+    iosArm64()
+    iosSimulatorArm64()
+
+    sourceSets {
+        commonMain.dependencies {
+            // feature:* depends on core:* only, never on another feature.
+            implementation(projects.core.model)
+            implementation(projects.core.designsystem)
+            implementation(libs.compose.runtime)
+        }
+    }
+}
