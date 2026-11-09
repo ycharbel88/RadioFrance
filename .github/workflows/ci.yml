@@ -1,0 +1,95 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+# A new push on the same branch cancels the run that is still going.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  android:
+    name: Android (build, unit tests, ktlint)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      # Matches gradle/gradle-daemon-jvm.properties (Azul, 21), so Gradle
+      # does not download a second JDK.
+      - uses: actions/setup-java@v6
+        with:
+          distribution: zulu
+          java-version: 21
+
+      # Caches ~/.gradle (wrapper, dependencies, build cache).
+      - uses: gradle/actions/setup-gradle@v6
+
+      # No local.properties in CI, so RADIOFRANCE_API_KEY is "": the build must still pass.
+      - name: Build, unit tests, ktlint
+        run: ./gradlew :androidApp:assembleDebug :shared:testAndroidHostTest ktlintCheck
+
+  ios:
+    name: iOS (framework link + xcodebuild, simulator)
+    runs-on: macos-26
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: zulu
+          java-version: 21
+
+      - uses: gradle/actions/setup-gradle@v6
+
+      # Kotlin/Native downloads its compiler and the Apple dependencies
+      # (~1 GB) into ~/.konan. They change only when the Kotlin version changes.
+      - name: Cache Kotlin/Native (~/.konan)
+        uses: actions/cache@v6
+        with:
+          path: ~/.konan
+          key: konan-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('gradle/libs.versions.toml') }}
+          restore-keys: konan-${{ runner.os }}-${{ runner.arch }}-
+
+      # Kotlin 2.4.21 officially supports Xcode 26.4 (KMP compatibility guide).
+      # The runner's default Xcode is newer. Fail loudly instead of silently
+      # building with another version.
+      - name: Select Xcode 26.4
+        run: |
+          XCODE=/Applications/Xcode_26.4.app
+          if [ ! -d "$XCODE" ]; then
+            echo "::error::Xcode 26.4 (required by Kotlin 2.4.21) is not on this runner image. Installed versions:"
+            ls -d /Applications/Xcode_*.app
+            exit 1
+          fi
+          sudo xcode-select -s "$XCODE"
+          VERSION=$(xcodebuild -version | head -1)
+          if ! echo "$VERSION" | grep -qE '^Xcode 26\.4(\.|$)'; then
+            echo "::error::Selected '$VERSION', expected Xcode 26.4.x"
+            exit 1
+          fi
+          echo "Using $VERSION"
+
+      - name: Link iOS framework (simulator, arm64)
+        run: ./gradlew :shared:linkDebugFrameworkIosSimulatorArm64
+
+      # -target, not -scheme: the project has no shared scheme committed.
+      # ARCHS=arm64: only iosSimulatorArm64 is declared (no x86_64 simulator).
+      # The "Compile Kotlin Framework" build phase runs
+      # :shared:embedAndSignAppleFrameworkForXcode, which reuses the step above.
+      - name: Build iosApp (simulator)
+        run: |
+          xcodebuild \
+            -project iosApp/iosApp.xcodeproj \
+            -target iosApp \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            ARCHS=arm64 \
+            CODE_SIGNING_ALLOWED=NO \
+            build
