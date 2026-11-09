@@ -29,6 +29,7 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
+            implementation(libs.koin.core)
             // feature:* depends on core:* only, never on another feature.
             implementation(projects.core.model)
             implementation(projects.core.designsystem)

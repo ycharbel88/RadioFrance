@@ -43,6 +43,7 @@ kotlin {
             implementation(libs.compose.uiTooling)
         }
         commonMain.dependencies {
+            implementation(libs.koin.core)
             // shared is the app shell and the only iOS framework: it wires every module.
             implementation(projects.core.model)
             implementation(projects.core.network)
