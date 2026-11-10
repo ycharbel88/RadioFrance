@@ -1,26 +1,54 @@
 package com.chy.radiofrance
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.chy.radiofrance.core.designsystem.Equalizer
 import com.chy.radiofrance.core.designsystem.RadioFranceIcons
+import com.chy.radiofrance.core.designsystem.StationMonogram
+import com.chy.radiofrance.core.designsystem.miniPlayerGradient
+import com.chy.radiofrance.core.designsystem.onBrandColor
+import com.chy.radiofrance.core.designsystem.stationBrand
 import com.chy.radiofrance.core.player.PlaybackError
 import com.chy.radiofrance.core.player.PlayerState
 import com.chy.radiofrance.core.player.station
@@ -51,63 +79,158 @@ fun MiniPlayer(modifier: Modifier = Modifier, viewModel: StationsViewModel = koi
     )
 }
 
-/** Stateless mini-player. Draws nothing when [player] is Idle, so the bar collapses. */
+/**
+ * Stateless mini-player: a floating card in the current station's brand colour.
+ * Slides in when a station is loaded and out when the player goes back to Idle;
+ * its colour cross-fades when the station changes.
+ */
 @Composable
 internal fun MiniPlayerContent(
     player: PlayerState,
     onTogglePlayPause: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    // The exit animation still needs something to draw once the player is Idle:
+    // keep the last state that had a station. A plain cache, not observable state.
+    val last = remember { LastShown() }
+    if (player.station != null) last.state = player
+
+    AnimatedVisibility(
+        visible = player.station != null,
+        enter = slideInVertically { it } + fadeIn(),
+        exit = slideOutVertically { it } + fadeOut(),
+        modifier = modifier
+    ) {
+        last.state?.let { MiniPlayerCard(it, onTogglePlayPause) }
+    }
+}
+
+private class LastShown {
+    var state: PlayerState? = null
+}
+
+@Composable
+private fun MiniPlayerCard(player: PlayerState, onTogglePlayPause: () -> Unit) {
     val station = player.station ?: return
-    Surface(tonalElevation = 3.dp, modifier = modifier.fillMaxWidth()) {
-        // Edge-to-edge: keep the content above the system navigation bar.
-        Column(Modifier.windowInsetsPadding(WindowInsets.navigationBars)) {
-            if (player is PlayerState.Buffering) {
-                LinearProgressIndicator(Modifier.fillMaxWidth())
-            }
+    val brand = stationBrand(station.brandId, station.brandName)
+    val stops = miniPlayerGradient(brand.color)
+    // Animated, so switching from FIP to franceinfo blends pink into yellow.
+    val start by animateColorAsState(stops.first(), label = "start")
+    val end by animateColorAsState(stops.last(), label = "end")
+    val content by animateColorAsState(onBrandColor(stops.first()), label = "content")
+    val shape = RoundedCornerShape(24.dp)
+
+    // Floats above the navigation bar (edge-to-edge) and the side cutouts, with the
+    // same 600 dp maximum width as the list on wide windows.
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
+            .fillMaxWidth()
+            .windowInsetsPadding(
+                WindowInsets.safeDrawing.only(
+                    WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal
+                )
+            )
+            .padding(horizontal = 12.dp, vertical = 8.dp)
+    ) {
+        Box(
+            Modifier
+                .widthIn(max = 600.dp)
+                .fillMaxWidth()
+                .shadow(8.dp, shape)
+                .clip(shape)
+                .background(Brush.horizontalGradient(listOf(start, end)))
+        ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(start = 16.dp, end = 4.dp, top = 8.dp, bottom = 8.dp)
+                modifier = Modifier.padding(12.dp)
             ) {
-                Column(Modifier.weight(1f)) {
-                    Text(
-                        text = station.name,
-                        style = MaterialTheme.typography.titleMedium,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    StatusLine(player)
+                // One node for TalkBack: "FIP Jazz, En lecture". The button is separate.
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .weight(1f)
+                        .semantics(mergeDescendants = true) { }
+                ) {
+                    StationMonogram(brand, size = 48.dp)
+                    Spacer(Modifier.width(12.dp))
+                    Column {
+                        Text(
+                            text = station.name,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = content,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        StatusLine(player, content)
+                    }
                 }
-                if (canTogglePlayback(player)) PlayPauseButton(player, onTogglePlayPause)
+                if (canTogglePlayback(player)) {
+                    Spacer(Modifier.width(8.dp))
+                    PlayPauseButton(
+                        player,
+                        background = content,
+                        icon = start,
+                        onClick = onTogglePlayPause
+                    )
+                }
+            }
+            if (player is PlayerState.Buffering) {
+                LinearProgressIndicator(
+                    color = content,
+                    trackColor = content.copy(alpha = 0.2f),
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth()
+                        .height(3.dp)
+                )
             }
         }
     }
 }
 
+// "En lecture" with a small equalizer, "Chargement", "En pause", or why it failed.
+// The error stays in the content colour: the error red can't be trusted on every
+// brand colour, the words say it.
 @Composable
-private fun StatusLine(player: PlayerState) {
+private fun StatusLine(player: PlayerState, content: Color) {
     val text = when (player) {
         is PlayerState.Error -> stringResource(playbackErrorResource(player.reason))
         else -> playerStateResource(player)?.let { stringResource(it) } ?: return
     }
-    Text(
-        text = text,
-        style = MaterialTheme.typography.bodyMedium,
-        color = if (player is PlayerState.Error) {
-            MaterialTheme.colorScheme.error
-        } else {
-            MaterialTheme.colorScheme.onSurfaceVariant
-        },
-        maxLines = 2,
-        overflow = TextOverflow.Ellipsis
-    )
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        if (player is PlayerState.Playing) Equalizer(color = content, size = 14.dp)
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodyMedium,
+            color = content.copy(alpha = 0.85f),
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
 }
 
-// Pause while playing or connecting; play otherwise (after an error, play is the retry).
+// A large round button: pause while playing or connecting, play otherwise (after
+// an error, play is the retry). Filled with the text colour, icon in the brand colour.
 @Composable
-private fun PlayPauseButton(player: PlayerState, onClick: () -> Unit) {
+private fun PlayPauseButton(
+    player: PlayerState,
+    background: Color,
+    icon: Color,
+    onClick: () -> Unit
+) {
     val showsPause = player is PlayerState.Playing || player is PlayerState.Buffering
-    IconButton(onClick = onClick) {
+    FilledIconButton(
+        onClick = onClick,
+        colors = IconButtonDefaults.filledIconButtonColors(
+            containerColor = background,
+            contentColor = icon
+        ),
+        modifier = Modifier.size(56.dp)
+    ) {
         Icon(
             painter = painterResource(
                 if (showsPause) RadioFranceIcons.Pause else RadioFranceIcons.Play
