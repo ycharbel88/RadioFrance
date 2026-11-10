@@ -3,8 +3,13 @@ package com.chy.radiofrance.core.player
 import org.koin.dsl.module
 
 /**
- * Koin bindings of core:player that are shared by every platform. Empty for now.
- * The platform `AudioPlayer` (Media3 on Android, a stub on iOS) will be bound in
- * a platform Koin module, not with expect/actual classes.
+ * Koin bindings of core:player shared by every platform.
+ *
+ * [UnavailableAudioPlayer] is the default, so the graph is complete on every
+ * platform at every step. A platform with a real player overrides the binding
+ * from its own module, loaded after this one (Android: Media3, step 5). iOS
+ * keeps the default for now.
  */
-val playerModule = module { }
+val playerModule = module {
+    single<AudioPlayer> { UnavailableAudioPlayer() }
+}
