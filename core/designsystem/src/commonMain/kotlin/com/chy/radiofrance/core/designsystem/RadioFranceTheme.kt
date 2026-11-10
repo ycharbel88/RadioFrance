@@ -15,12 +15,16 @@ import androidx.compose.ui.text.font.FontWeight
 // Dynamic color (Android 12 wallpaper colours) is never used: it would compete
 // with the brand colours, and it doesn't exist on iOS.
 
+// Named: the contrast tests check brand colours against them.
+internal val DarkBackground = Color(0xFF111215)
+internal val LightBackground = Color(0xFFF4F5F7)
+
 private val DarkColors = darkColorScheme(
     primary = Color(0xFFFF5A6E),
     onPrimary = Color(0xFF2A0006),
-    background = Color(0xFF111215),
+    background = DarkBackground,
     onBackground = Color(0xFFF2F2F5),
-    surface = Color(0xFF111215),
+    surface = DarkBackground,
     onSurface = Color(0xFFF2F2F5),
     surfaceVariant = Color(0xFF2A2D33),
     onSurfaceVariant = Color(0xFFA0A3AB),
@@ -32,9 +36,9 @@ private val DarkColors = darkColorScheme(
 private val LightColors = lightColorScheme(
     primary = Color(0xFFC8001A),
     onPrimary = Color.White,
-    background = Color(0xFFF4F5F7),
+    background = LightBackground,
     onBackground = Color(0xFF15171A),
-    surface = Color(0xFFF4F5F7),
+    surface = LightBackground,
     onSurface = Color(0xFF15171A),
     surfaceVariant = Color(0xFFE3E5EA),
     onSurfaceVariant = Color(0xFF5F636B),
