@@ -113,13 +113,17 @@ internal class MediaControllerAudioPlayer(context: Context) : AudioPlayer {
         when (command) {
             is Command.Play -> {
                 currentStation = command.station
-                // Replaces whatever was playing. Setting the item again is also how a
-                // resume from the app reconnects to the live edge.
-                setMediaItem(command.station.toMediaItem())
-                // Leaves STATE_IDLE: the player opens the stream and starts buffering.
-                prepare()
+                if (currentMediaItem?.mediaId != command.station.id) {
+                    // Another station (or none loaded): replaces whatever was playing.
+                    setMediaItem(command.station.toMediaItem())
+                    // Leaves STATE_IDLE: the player opens the stream and starts buffering.
+                    prepare()
+                }
                 // playWhenReady = true: audio starts as soon as enough is buffered.
-                // In the service this goes through LivePlayer.play().
+                // In the service this goes through LivePlayer.play(), which decides,
+                // for the station already loaded, between resuming the buffer and
+                // rejoining live (long lag, stopped or failed). Reloading the item here
+                // would reconnect, and play the server's pre-roll ad, on every resume.
                 play()
             }
 

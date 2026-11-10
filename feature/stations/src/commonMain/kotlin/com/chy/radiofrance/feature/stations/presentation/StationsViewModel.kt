@@ -128,7 +128,8 @@ class StationsViewModel(
         if (!alreadyOn) player.play(station)
     }
 
-    // Resume is `play(station)`: for live radio it reconnects to the live edge.
+    // Resume is `play(station)`: the player resumes its buffer, or rejoins live after a
+    // long lag or an error (Android: LivePlayer).
     private fun togglePlayPause() {
         when (val current = player.state.value) {
             PlayerState.Idle -> Unit

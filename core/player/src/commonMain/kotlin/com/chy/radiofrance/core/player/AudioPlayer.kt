@@ -15,8 +15,9 @@ interface AudioPlayer {
     val state: StateFlow<PlayerState>
 
     /**
-     * Starts [station]. Also how to resume after a pause: for a live stream,
-     * resuming means reconnecting to the live edge, so there is no `resume()`.
+     * Starts [station]. Also how to resume after a pause (there is no `resume()`): for
+     * the station already loaded, the platform player decides between resuming its
+     * buffer and rejoining the live broadcast.
      */
     fun play(station: Station)
 

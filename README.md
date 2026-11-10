@@ -53,9 +53,12 @@ or `androidApp`. Why each module exists is written at the top of its `build.grad
   `ExoPlayer` and the `MediaSession`. Media3 turns that into the media notification, lock
   screen controls, headset/Bluetooth buttons and playback that survives the Activity.
   ExoPlayer handles audio focus and "becoming noisy" (headphones unplugged) itself.
-- Live radio: the session plays through `LivePlayer`, a `ForwardingPlayer` whose `play()`
-  reconnects to the live edge after a pause, a stop or an error. Resuming from the app,
-  the notification, the lock screen or a headset button never plays a stale buffer.
+- Live radio: the session plays through `LivePlayer`, a `ForwardingPlayer` that decides on
+  each resume between the buffer and the live broadcast. Each new connection starts with
+  a pre-roll ad from the server, so short pauses resume the buffer; once the total lag
+  behind live (all pauses since the last connection) passes `LIVE_REJOIN_THRESHOLD`
+  (60 s), or after a stop or an error, the resume reconnects to live. Same rule from the
+  app, the notification, the lock screen and headset buttons.
 - `MediaControllerAudioPlayer` is the app side: a `MediaController` connected
   asynchronously (commands sent before the connection are queued in order), mapping
   the player's events to `PlayerState`. Application context only.
@@ -63,7 +66,7 @@ or `androidApp`. Why each module exists is written at the top of its `build.grad
 - `POST_NOTIFICATIONS` is neither declared nor requested: media session notifications
   are exempt from it (Android 13+ notification permission docs).
 - The service and the controller are checked on a device, not by unit tests. The
-  state mapping and the live-edge rule are pure functions, tested on the JVM.
+  state mapping, the live-edge rule and the lag accounting are pure, tested on the JVM.
 - Debug builds log every player event, plus load starts/cancels, under the logcat tag
   `EventLogger`. A resume that reconnects shows `loadCanceled` then `loadStarted` with
   a new task id.

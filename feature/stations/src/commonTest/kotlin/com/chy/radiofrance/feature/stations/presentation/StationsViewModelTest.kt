@@ -265,7 +265,8 @@ class StationsViewModelTest {
      * Every player state x every player event -> the command sent to the player.
      * Rules: a tap on the station already on (playing or buffering) never restarts
      * it; another station always switches; toggle pauses what is on and resumes
-     * (play = reconnect to live) what is paused or failed; nothing to toggle when idle.
+     * (play: the player picks buffer or live) what is paused or failed; nothing to
+     * toggle when idle.
      * A NotSupported error still sends play: the mini-player hides its button there.
      */
     @Test

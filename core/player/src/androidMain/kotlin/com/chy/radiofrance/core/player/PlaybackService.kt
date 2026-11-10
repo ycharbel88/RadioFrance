@@ -3,10 +3,12 @@ package com.chy.radiofrance.core.player
 import android.app.PendingIntent
 import android.content.Intent
 import android.content.pm.ApplicationInfo
+import android.os.SystemClock
 import androidx.annotation.OptIn
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.ForwardingPlayer
+import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
@@ -100,36 +102,53 @@ class PlaybackService : MediaSessionService() {
 }
 
 /**
- * Live radio, not on-demand: resuming must play what is on air *now*.
+ * Live radio, not on-demand: resuming must play what is on air, within reason.
  *
- * A plain ExoPlayer resumes where it paused: it plays its stale buffer, then reads
- * an HTTP connection the Icecast server may have dropped during the pause. So when
- * playback resumes after a pause, a stop or an error, [play] first jumps to the
- * default position (the live edge) and prepares again, which drops the buffer and
- * opens a new connection. Every resume path goes through here, because the session
- * holds this player: the app, the notification, the lock screen, headset buttons.
+ * A plain ExoPlayer resumes where it paused: it plays its buffer, so the listener
+ * drifts behind the broadcast by every pause. Reconnecting on every resume fixes
+ * that but costs a pre-roll ad each time. So this player tracks the total lag
+ * ([LiveLag]) and, on play, rejoins live (jump to the default position, prepare
+ * again: drops the buffer, opens a new connection) only when the lag passes
+ * [LIVE_REJOIN_THRESHOLD], or when there is no buffer to resume (stopped, failed,
+ * ended). Short pauses resume the buffer.
+ *
+ * Every resume path goes through here, because the session holds this player: the
+ * app, the notification, the lock screen, headset buttons.
  */
-private class LivePlayer(player: Player) : ForwardingPlayer(player) {
+private class LivePlayer(
+    player: Player,
+    private val clock: () -> Long = SystemClock::elapsedRealtime
+) : ForwardingPlayer(player) {
+    private val lag = LiveLag()
+
+    init {
+        // A listener on the wrapped ExoPlayer, not overrides of pause(): ExoPlayer
+        // also pauses on its own (lost audio focus, unplugged headphones), without
+        // going through this class.
+        player.addListener(
+            object : Player.Listener {
+                override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
+                    if (!playWhenReady) lag.onPaused(clock())
+                }
+
+                override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+                    lag.onNewStation()
+                }
+            }
+        )
+    }
+
     override fun play() {
-        if (shouldRejoinLive(playWhenReady, playbackState, currentMediaItem != null)) {
+        val rejoin = lag.onPlay(clock(), playWhenReady, playbackState, currentMediaItem != null)
+        if (rejoin) {
             seekToDefaultPosition()
             prepare()
         }
         super.play()
     }
-}
 
-/**
- * Whether a play command must reconnect to the live edge: there is a station, and
- * playback was interrupted (paused, stopped, ended or failed). A play while already
- * playing or starting changes nothing.
- */
-internal fun shouldRejoinLive(
-    playWhenReady: Boolean,
-    playbackState: Int,
-    hasCurrentItem: Boolean
-): Boolean {
-    if (!hasCurrentItem) return false
-    return !playWhenReady || playbackState == Player.STATE_IDLE ||
-        playbackState == Player.STATE_ENDED
+    // Some controllers send setPlayWhenReady(true) instead of play(): same rule.
+    override fun setPlayWhenReady(playWhenReady: Boolean) {
+        if (playWhenReady) play() else super.setPlayWhenReady(false)
+    }
 }

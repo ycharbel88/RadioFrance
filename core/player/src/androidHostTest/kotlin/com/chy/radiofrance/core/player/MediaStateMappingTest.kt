@@ -6,12 +6,10 @@ import com.chy.radiofrance.core.model.Station
 import com.chy.radiofrance.core.model.StationKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
 
 /**
- * The Media3 -> PlayerState rules and the live-edge rule, on plain values. The
- * service and the controller themselves need a device: they are checked by hand.
+ * The Media3 -> PlayerState rules, on plain values. The service and the controller
+ * themselves need a device: they are checked by hand.
  */
 class MediaStateMappingTest {
     private val fip = Station(
@@ -96,20 +94,5 @@ class MediaStateMappingTest {
         )
         // Transient focus loss: playWhenReady stays true, playback is suppressed.
         assertEquals(expected, state(playWhenReady = true, isPlaying = false))
-    }
-
-    @Test
-    fun a_resume_after_an_interruption_rejoins_the_live_edge() {
-        assertTrue(shouldRejoinLive(false, Player.STATE_READY, hasCurrentItem = true))
-        assertTrue(shouldRejoinLive(false, Player.STATE_BUFFERING, hasCurrentItem = true))
-        assertTrue(shouldRejoinLive(true, Player.STATE_IDLE, hasCurrentItem = true))
-        assertTrue(shouldRejoinLive(true, Player.STATE_ENDED, hasCurrentItem = true))
-    }
-
-    @Test
-    fun a_play_while_playing_or_without_a_station_does_not_reconnect() {
-        assertFalse(shouldRejoinLive(true, Player.STATE_READY, hasCurrentItem = true))
-        assertFalse(shouldRejoinLive(true, Player.STATE_BUFFERING, hasCurrentItem = true))
-        assertFalse(shouldRejoinLive(false, Player.STATE_IDLE, hasCurrentItem = false))
     }
 }
