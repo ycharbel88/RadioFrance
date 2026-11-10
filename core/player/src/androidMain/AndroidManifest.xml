@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Merged into the app's manifest: the service is declared next to its class. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- A playback foreground service needs both (Media3 background playback guide). -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <!-- ExoPlayer's WAKE_MODE_NETWORK: keeps the stream loading with the screen off. -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!-- No POST_NOTIFICATIONS: media session notifications are exempt from it
+         (Android 13+ notification permission docs). -->
+
+    <application>
+        <!-- exported + this action: how MediaControllers (ours, the system UI,
+             Bluetooth) find the session. -->
+        <service
+            android:name="com.chy.radiofrance.core.player.PlaybackService"
+            android:exported="true"
+            android:foregroundServiceType="mediaPlayback">
+            <intent-filter>
+                <action android:name="androidx.media3.session.MediaSessionService" />
+            </intent-filter>
+        </service>
+    </application>
+
+</manifest>
