@@ -26,7 +26,7 @@ core:testing ──► core:player   (test doubles; only ever a commonTest depen
 | `core:model` | Domain types (`Station`, `DataError`, `DataResult`), no dependencies. |
 | `core:network` | Apollo client, API key, `StationsRemoteDataSource`. No Apollo type leaves this module. |
 | `core:player` | `AudioPlayer` interface and `PlayerState`. No UI. Default binding: `UnavailableAudioPlayer`; Android: Media3 `PlaybackService` + `MediaControllerAudioPlayer` (see below). |
-| `core:designsystem` | `RadioFranceTheme` (Material 3 light/dark; brand colours come later), `RadioFranceIcons`. |
+| `core:designsystem` | `RadioFranceTheme` ("On air" dark/light), brand colours and contrast (`StationBrand`, `onBrandColor`), `StationMonogram`, `Equalizer`, `RadioFranceIcons`. |
 | `core:testing` | Test doubles shared across modules (`FakeAudioPlayer`). Only ever a `commonTest` dependency: KMP has no `testFixtures`. |
 
 Rules: `feature:*` depends only on `core:*`. `core:*` never depends on `feature:*`, `shared`
@@ -75,21 +75,42 @@ iOS: no player yet. Tapping a station shows "not supported" in the mini-player.
 
 ## UI (Compose Multiplatform, shared by Android and iOS)
 
-- `App()` (in `shared`): theme + `Scaffold` with a top bar, the stations screen, and the
-  mini-player at the bottom (hidden when nothing is loaded; play/pause, or retry after an
-  error).
+Visual target: an "On air" look, dark-first.
+
+- `App()` (in `shared`): theme + `Scaffold` with the stations screen and the floating
+  mini-player. The screen draws its own collapsing large top bar ("Radio France",
+  "77 stations en direct"), because only it knows the station count.
 - `StationsScreen` is the only composable that knows Koin (`koinViewModel()`) and the
   ViewModel. It collects the state with `collectAsStateWithLifecycle()` and hands it to the
   stateless `StationsScreenContent`, which the previews call directly.
-- States: loading, empty, error, and a sectioned list (sticky headers, keys = station ids)
-  with pull-to-refresh. A failed refresh keeps the list and shows a banner above it.
+- One vertical list (`ListRow.kt` turns the sections into rows; unit-tested):
+  - national stations: large cards in the brand gradient, with a "● DIRECT" chip;
+  - webradios: compact rows with a brand monogram and "Webradio · FIP";
+  - ICI's 45 local radios: collapsed behind one card ("ICI · 45 radios locales"); the
+    expanded state survives rotation (`rememberSaveable`).
+
+  The current station's row is tinted with its brand colour, with an accent bar and an
+  animated equalizer. Rows animate in and out (`animateItem`).
+- States: loading, empty, error, and the list with pull-to-refresh. A failed refresh keeps
+  the list and shows a banner above it.
 - Each `DataError` has its own message. "Retry" appears only when it can help (network or
   server error), never for a missing or refused API key or the daily quota.
   `StationsTexts.kt` holds these rules and is unit-tested.
+- Mini-player: a floating card in the current brand's colour (cross-fades between
+  stations), slides in and out, round play/pause button, thin bar while buffering.
+- Brand colours (`core:designsystem/StationBrand.kt`) are approximations: the API serves no
+  colours or logos, so monograms stand in for logos. Text on a brand colour is black or
+  white by WCAG luminance (`onBrandColor`): franceinfo yellow gets black text. Tests check
+  4.5:1 for every brand on every surface, and 3:1 for accents on both themes.
+- Accessibility: each row, card and the mini-player is one TalkBack node with the player
+  state ("FIP Jazz, Webradio · FIP, En lecture"); touch targets of 48 dp or more; the layout
+  holds at 200 % font scale (cards grow, monograms are sized like images).
+- Wide windows: the list and the mini-player keep a 600 dp width, centred, clear of
+  display cutouts. No orientation lock.
 - The UI is in French (`composeResources/values/strings.xml`). Another language is one more
   `values-xx` folder, with no code change.
-- Previews: one per state, light and dark, in `StationsPreviews.kt`. Open them in Android
-  Studio from the commonMain file.
+- Previews: every screen state, every player state of cards, rows and mini-player, light and
+  dark, and 200 % font scale, in `StationsPreviews.kt` and `MiniPlayerPreviews.kt`.
 
 ## API key
 
