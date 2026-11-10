@@ -23,6 +23,11 @@ kotlin {
         compilerOptions {
             jvmTarget = JvmTarget.JVM_11
         }
+        // Compose resources (the icons) are packaged as Android assets: the
+        // Android-KMP library plugin only does that when resources are enabled.
+        androidResources {
+            enable = true
+        }
     }
     iosArm64()
     iosSimulatorArm64()
@@ -33,8 +38,15 @@ kotlin {
             implementation(libs.compose.foundation)
             // `api`: RadioFranceTheme sets MaterialTheme, which callers read directly.
             api(libs.compose.material3)
+            // `api`: RadioFranceIcons exposes DrawableResource values.
+            api(libs.compose.components.resources)
         }
     }
+}
+
+// The generated `Res` class stays internal (default): callers go through RadioFranceIcons.
+compose.resources {
+    packageOfResClass = "com.chy.radiofrance.core.designsystem.resources"
 }
 
 ktlint {

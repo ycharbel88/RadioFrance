@@ -15,12 +15,9 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.chy.radiofrance.core.designsystem.RadioFranceIcons
 import com.chy.radiofrance.core.model.Station
 import com.chy.radiofrance.core.player.PlayerState
-import com.chy.radiofrance.feature.stations.resources.Res
-import com.chy.radiofrance.feature.stations.resources.ic_equalizer
-import com.chy.radiofrance.feature.stations.resources.ic_error
-import com.chy.radiofrance.feature.stations.resources.ic_pause
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -68,18 +65,18 @@ private fun PlaybackIndicator(state: PlayerState) {
             CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
 
         is PlayerState.Playing -> Icon(
-            painter = painterResource(Res.drawable.ic_equalizer),
+            painter = painterResource(RadioFranceIcons.Equalizer),
             contentDescription = null,
             tint = MaterialTheme.colorScheme.primary
         )
 
         is PlayerState.Paused -> Icon(
-            painter = painterResource(Res.drawable.ic_pause),
+            painter = painterResource(RadioFranceIcons.Pause),
             contentDescription = null
         )
 
         is PlayerState.Error -> Icon(
-            painter = painterResource(Res.drawable.ic_error),
+            painter = painterResource(RadioFranceIcons.Error),
             contentDescription = null,
             tint = MaterialTheme.colorScheme.error
         )
