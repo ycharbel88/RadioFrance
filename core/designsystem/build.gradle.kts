@@ -30,6 +30,9 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(libs.compose.runtime)
+            implementation(libs.compose.foundation)
+            // `api`: RadioFranceTheme sets MaterialTheme, which callers read directly.
+            api(libs.compose.material3)
         }
     }
 }
