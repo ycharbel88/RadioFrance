@@ -1,0 +1,23 @@
+# Every station in one request (1 of the 1000 daily requests on a cold start).
+# Only fields checked in step 0 (docs/api-findings.md) plus `description`,
+# which the committed schema.graphqls declares (nullable) on all three types.
+query Stations {
+  brands {
+    id
+    title
+    description
+    liveStream
+    webRadios {
+      id
+      title
+      description
+      liveStream
+    }
+    localRadios {
+      id
+      title
+      description
+      liveStream
+    }
+  }
+}

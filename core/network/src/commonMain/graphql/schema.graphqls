@@ -1,0 +1,1246 @@
+"""
+ A Brand is a web or broadcast radio station. 
+"""
+type Brand {
+  """
+   The unique identifier of a brand 
+  """
+  id: ID!
+
+  """
+   Brand's title 
+  """
+  title: String!
+
+  """
+   Brand's baseline
+  """
+  baseline: String
+
+  """
+   Brand's description
+  """
+  description: String
+
+  """
+   Brand's website URL
+  """
+  websiteUrl: String
+
+  """
+   List of available webradios
+  """
+  webRadios: [WebRadio]
+
+  """
+   List of available local radios
+  """
+  localRadios: [LocalRadio]
+
+  """
+   live stream
+  """
+  liveStream: String
+
+  """
+   Player URL
+  """
+  playerUrl: String
+}
+
+"""
+The `ID` scalar type represents a unique identifier, often used to refetch an object or as key for a cache. The ID type appears in a JSON response as a String; however, it is not intended to be human-readable. When expected as an input type, any string (such as `"4"`) or integer (such as `4`) input value will be accepted as an ID.
+"""
+scalar ID
+
+"""
+The `String` scalar type represents textual data, represented as UTF-8 character sequences. The String type is most often used by GraphQL to represent free-form human-readable text.
+"""
+scalar String
+
+"""
+ This object contains a webradio: a webradio is a continuous stream of programs defined by the grid. 
+"""
+type WebRadio {
+  """
+   The unique identifier of a webradio
+  """
+  id: ID!
+
+  """
+   Webradio's title
+  """
+  title: String!
+
+  """
+   Webradio's description
+  """
+  description: String
+
+  """
+   live stream
+  """
+  liveStream: String
+
+  """
+   Player URL
+  """
+  playerUrl: String
+}
+
+"""
+ This object contains a local radio: a local radio is a radio covering a restricted geographical area and belongs to a network as France Bleu or FIP. 
+"""
+type LocalRadio {
+  """
+   The unique identifier of a local radio
+  """
+  id: ID!
+
+  """
+   Local radio's title
+  """
+  title: String!
+
+  """
+   Local radio's description
+  """
+  description: String
+
+  """
+   live stream
+  """
+  liveStream: String
+
+  """
+   Player URL
+  """
+  playerUrl: String
+}
+
+type Query {
+  """
+   Get the list of stations available
+  """
+  brands: [Brand]
+
+  """
+   Get a specific station
+  """
+  brand(" station id" id: StationsEnum!): Brand
+
+  """
+   Get diffusions from specific Show url
+  """
+  diffusionsOfShowByUrl(" Show's url" url: String!, " Limit of show to return. Default=10 Max=100" first: Int, " Cursor use that to paginate" after: String): Diffusions
+
+  """
+   Get diffusions from specific Station's id with optionnal taxonomies filters
+  """
+  diffusions(" Station's id" station: StationsEnum!, " themes ids" themes: [String!], " subthemes ids" subthemes: [String!], " subsubthemes ids" subsubthemes: [String!], " tags ids" tags: [String!], " Start time (timestamp)" start: Int, " End time (timestamp)" end: Int, " Limit of diffusions to return. Default=10 Max=100" first: Int, " Cursor use that to paginate" after: String): Diffusions
+
+  concerts(" Limit of diffusions to return. Default=10 Max=100" first: Int, " Cursor use that to paginate" after: String): Diffusions
+
+  """
+   Get a specific show by ID
+  """
+  show(" Show's ID" id: ID!): Show
+
+  """
+   Get a specific show by url
+  """
+  showByUrl(" Show's url" url: String!): Show
+
+  """
+   Get list of shows for a specific Station
+  """
+  shows(" Station's id" station: StationsEnum!, " Limit of show to return. Default=10 Max=100" first: Int, " Cursor use that to paginate" after: String): Shows
+
+  """
+   Get the program schedule of a specific station
+  """
+  grid(" Start time (timestamp)" start: Int, " End time (timestamp)" end: Int, " Station's id" station: StationsEnum!, " Tracks are ignored by default. This flag allows you to also retrieve TrackSteps. Default to 'false'" includeTracks: Boolean): [Step]
+
+  """
+   Get a paginated Grid for a specific station
+  """
+  paginatedGrid(" Start time (timestamp)" start: Int, " End time (timestamp)" end: Int, " Station's id" station: StationsEnum!, " Tracks are ignored by default. This flag allows you to also retrieve TrackSteps. Default to 'false'" includeTracks: Boolean, " Cursor for pagination" after: String): GridEdge
+
+  live(" Station's id" station: StationsEnum!): Live
+
+  """
+   Get a list of taxonomies
+  """
+  taxonomies(" taxonomy source" source: TaxonomySourceEnum, " taxonomy types" types: [TaxonomyTypeEnum!], " paths to filter" paths: [String!], " Limit of show to return. Default=10 Max=100" first: Int, " Cursor use that to paginate" after: String): Taxonomies
+}
+
+"""
+The `Int` scalar type represents non-fractional signed whole numeric values. Int can represent values between -(2^31) and 2^31 - 1.
+"""
+scalar Int
+
+"""
+The `Boolean` scalar type represents `true` or `false`.
+"""
+scalar Boolean
+
+"""
+List of Radio France brands, local radios and webradios
+"""
+enum StationsEnum {
+  ELSASS
+
+  FIP
+
+  FIP_CULTES
+
+  FIP_ELECTRO
+
+  FIP_GROOVE
+
+  FIP_JAZZ
+
+  FIP_METAL
+
+  FIP_NOUVEAUTES
+
+  FIP_POP
+
+  FIP_HIP_HOP
+
+  FIP_REGGAE
+
+  FIP_ROCK
+
+  FIP_SACREFRANCAIS
+
+  FIP_WORLD
+
+  FORMATION
+
+  FRANCEBLEU
+
+  FRANCEBLEU_ALSACE
+
+  FRANCEBLEU_ARMORIQUE
+
+  FRANCEBLEU_AUXERRE
+
+  FRANCEBLEU_AZUR
+
+  FRANCEBLEU_BEARN
+
+  FRANCEBLEU_BELFORT_MONTBELIARD
+
+  FRANCEBLEU_BERRY
+
+  FRANCEBLEU_BESANCON
+
+  FRANCEBLEU_BOURGOGNE
+
+  FRANCEBLEU_BREIZH_IZEL
+
+  FRANCEBLEU_CHAMPAGNE_ARDENNE
+
+  FRANCEBLEU_COTENTIN
+
+  FRANCEBLEU_CREUSE
+
+  FRANCEBLEU_DROME_ARDECHE
+
+  FRANCEBLEU_GARD_LOZERE
+
+  FRANCEBLEU_GASCOGNE
+
+  FRANCEBLEU_GIRONDE
+
+  FRANCEBLEU_HERAULT
+
+  FRANCEBLEU_ISERE
+
+  FRANCEBLEU_LA_ROCHELLE
+
+  FRANCEBLEU_LIMOUSIN
+
+  FRANCEBLEU_LOIRE_OCEAN
+
+  FRANCEBLEU_LORRAINE_NORD
+
+  FRANCEBLEU_MAINE
+
+  FRANCEBLEU_MAYENNE
+
+  FRANCEBLEU_NORD
+
+  FRANCEBLEU_NORMANDIE_CAEN
+
+  FRANCEBLEU_NORMANDIE_ROUEN
+
+  FRANCEBLEU_ORLEANS
+
+  FRANCEBLEU_PARIS
+
+  FRANCEBLEU_PAYS_BASQUE
+
+  FRANCEBLEU_PAYS_DE_SAVOIE
+
+  FRANCEBLEU_PAYS_D_AUVERGNE
+
+  FRANCEBLEU_PERIGORD
+
+  FRANCEBLEU_PICARDIE
+
+  FRANCEBLEU_POITOU
+
+  FRANCEBLEU_PROVENCE
+
+  FRANCEBLEU_RCFM
+
+  FRANCEBLEU_ROUSSILLON
+
+  FRANCEBLEU_SAINT_ETIENNE_LOIRE
+
+  FRANCEBLEU_SUR_LORRAINE
+
+  FRANCEBLEU_TOULOUSE
+
+  FRANCEBLEU_TOURAINE
+
+  FRANCEBLEU_VAUCLUSE
+
+  FRANCEBLEU_CHANSON_FRANCAISE
+
+  FRANCEBLEU_100POUR100ANNEES80
+
+  FRANCECULTURE
+
+  FRANCEINFO
+
+  FRANCEINTER
+
+  FRANCEINTER_LA_MUSIQUE_INTER
+
+  FRANCEMUSIC
+
+  FRANCEMUSIQUE
+
+  FRANCEMUSIQUE_CLASSIQUE_EASY
+
+  FRANCEMUSIQUE_CLASSIQUE_PLUS
+
+  FRANCEMUSIQUE_CLASSIQUE_LOVE
+
+  FRANCEMUSIQUE_CONCERT_RF
+
+  FRANCEMUSIQUE_LA_CONTEMPORAINE
+
+  FRANCEMUSIQUE_LA_JAZZ
+
+  FRANCEMUSIQUE_OCORA_MONDE
+
+  FRANCEMUSIQUE_LA_BAROQUE
+
+  FRANCEMUSIQUE_LA_BO
+
+  FRANCEMUSIQUE_OPERA
+
+  FRANCEMUSIQUE_PIANO_ZEN
+
+  MOUV
+}
+
+"""
+ A PodcastEpisode is a media file in a given format / resolution.
+"""
+type PodcastEpisode {
+  """
+   The unique identifier of a manifestation
+  """
+  id: ID!
+
+  """
+   PodcastEpisode's title
+  """
+  title: String!
+
+  """
+   PodcastEpisode's URL
+  """
+  url: String!
+
+  """
+   Player's URL for the PodcastEpisode
+  """
+  playerUrl: String
+
+  """
+   PodcastEpisode's creation date
+  """
+  created: Int!
+
+  """
+   PodcastEpisode's duration
+  """
+  duration: Int
+
+  """
+   The diffusion associate to the manifestation
+  """
+  diffusion: Diffusion
+}
+
+type PerformanceVideo {
+  youtube: String
+
+  dailymotion: String
+}
+
+"""
+ A Diffusion is an occurence of a radio Show on a given Station, or a concert.
+"""
+type Diffusion {
+  """
+   The unique identifier of an diffusion
+  """
+  id: ID!
+
+  """
+   Diffusion's title
+  """
+  title: String!
+
+  """
+   Diffusion's standFirst
+  """
+  standFirst: String
+
+  """
+   Website's URL of the Diffusion
+  """
+  url: String
+
+  """
+   Concert's place
+  """
+  place: String
+
+  """
+   Concert's video
+  """
+  performanceVideo: PerformanceVideo
+
+  """
+   Diffusion's publication date (this field can be null if the diffusion has not been published)
+  """
+  published_date: String
+
+  """
+   Diffusion's expiration (expired if the first podcastEpisode is expired)
+  """
+  isStreamable: Boolean
+
+  """
+   List of associated podcats
+  """
+  podcastEpisode: PodcastEpisode
+
+  """
+   Personnalities associates to a Diffusion
+  """
+  personalitiesConnection: DiffusionPersonalitiesConnection
+
+  """
+   Diffusion's taxonomies
+  """
+  taxonomiesConnection: DiffusionTaxonomiesConnection
+
+  """
+   Interpretations connection (in case of a concert)
+  """
+  interpretationsConnection: InterpretationsConnection
+
+  """
+   Transcription of the diffusion. This is a experimental feature
+  """
+  transcript: Transcript
+
+  """
+   Show
+  """
+  show: Show
+}
+
+type Diffusions {
+  edges: [DiffusionEdge]
+}
+
+type DiffusionEdge {
+  cursor: String!
+
+  node: Diffusion
+}
+
+type DiffusionPersonalitiesConnection {
+  edges: [DiffusionPersonalitiesEdge]
+}
+
+type DiffusionPersonalitiesEdge {
+  relation: String
+
+  info: String
+
+  node: Personality
+}
+
+type InterpretationsConnection {
+  edges: [DiffusionInterpretationsEdge]
+}
+
+type DiffusionInterpretationsEdge {
+  relation: String
+
+  info: String
+
+  node: Diffusion
+}
+
+type DiffusionTaxonomiesConnection {
+  edges: [DiffusionTaxonomiesEdge]
+}
+
+type DiffusionTaxonomiesEdge {
+  relation: String
+
+  info: String
+
+  node: Taxonomy
+}
+
+"""
+ A Personality is an individual or an organisation.
+"""
+type Personality {
+  """
+   The unique identifier of a personality
+  """
+  id: ID!
+
+  """
+   Personality's name
+  """
+  name: String!
+}
+
+"""
+ A radio show
+"""
+type Show {
+  """
+   The unique identifier of a Show
+  """
+  id: ID!
+
+  """
+   Show's title
+  """
+  title: String!
+
+  """
+   Website's URL of the Concept
+  """
+  url: String
+
+  """
+   Show's standFirst
+  """
+  standFirst: String
+
+  """
+   Links to the show's podcast
+  """
+  podcast: Podcast
+
+  """
+   Personnalities associates to a Show
+  """
+  personalitiesConnection: ShowPersonalitiesConnection
+
+  """
+   Diffusions associates to a Show
+  """
+  diffusionsConnection: ShowDiffusionsConnection
+
+  """
+   Taxonomies associates to a Show
+  """
+  taxonomiesConnection: ShowTaxonomiesConnection
+}
+
+"""
+ An object referencing links to a podcast
+"""
+type Podcast {
+  """
+   Link to the RSS stream
+  """
+  rss: String!
+
+  """
+   Link to iTunes
+  """
+  itunes: String
+}
+
+type Shows {
+  edges: [ShowEdge]
+}
+
+type ShowEdge {
+  cursor: String!
+
+  node: Show
+}
+
+type ShowDiffusionsConnection {
+  edges: [ShowDiffusionsEdge]
+}
+
+type ShowDiffusionsEdge {
+  node: Diffusion
+}
+
+type ShowPersonalitiesConnection {
+  edges: [ShowPersonalitiesEdge]
+}
+
+type ShowPersonalitiesEdge {
+  relation: String
+
+  info: String
+
+  node: Personality
+}
+
+type ShowTaxonomiesConnection {
+  edges: [ShowTaxonomiesEdge]
+}
+
+type ShowTaxonomiesEdge {
+  relation: String
+
+  info: String
+
+  node: Taxonomy
+}
+
+"""
+ A Step represents a period of time on a given radio Station.
+"""
+interface Step {
+  """
+   The unique identifier of a step
+  """
+  id: ID!
+
+  """
+   Start time of the step
+  """
+  start: Int
+
+  """
+   End time of the step
+  """
+  end: Int
+}
+
+"""
+ A blank step is a step without diffusion
+"""
+type BlankStep implements Step {
+  """
+   The unique identifier of a step
+  """
+  id: ID!
+
+  """
+   Start time of the step
+  """
+  start: Int
+
+  """
+   End time of the step
+  """
+  end: Int
+
+  """
+   Step's title
+  """
+  title: String
+
+  """
+   Step within the current step
+  """
+  children: [Step]
+}
+
+"""
+ A diffusion step is a step with an diffusion
+"""
+type DiffusionStep implements Step {
+  """
+   The unique identifier of a step
+  """
+  id: ID!
+
+  """
+   Start time of the step
+  """
+  start: Int
+
+  """
+   End time of the step
+  """
+  end: Int
+
+  """
+   Step within the current step
+  """
+  children: [Step]
+
+  diffusion: Diffusion
+}
+
+"""
+ A track step is a step with a song/track
+"""
+type TrackStep implements Step {
+  """
+   The unique identifier of a step
+  """
+  id: ID!
+
+  """
+   Start time of the step
+  """
+  start: Int
+
+  """
+   End time of the step
+  """
+  end: Int
+
+  """
+   Song
+  """
+  track: Track
+}
+
+"""
+ This object contains a show, a program and a song
+"""
+type Live {
+  """
+   A station show
+  """
+  show: Step
+
+  """
+   A station program in show
+  """
+  program: Step
+
+  """
+   A station song in program
+  """
+  song: TrackStep
+}
+
+"""
+ Paginated Grid
+"""
+type GridPage {
+  """
+   Array of grid Step items
+  """
+  steps: [Step]
+}
+
+"""
+ Paginated grid wrapper with page info
+"""
+type GridEdge {
+  """
+   Cursor for the next page
+  """
+  cursor: String
+
+  """
+   Current Grid page
+  """
+  node: GridPage
+}
+
+"""
+ A taxonomy can be a tag, a category...
+"""
+type Taxonomy {
+  """
+   Taxonomy's ID
+  """
+  id: ID!
+
+  """
+   Taxonomy's path
+  """
+  path: String!
+
+  """
+   Taxonomy's type
+  """
+  type: String
+
+  """
+   Taxonomy's title
+  """
+  title: String
+
+  """
+   Taxonomy's standFirst
+  """
+  standFirst: String
+}
+
+type Taxonomies {
+  edges: [TaxonomyEdge]
+}
+
+type TaxonomyEdge {
+  cursor: String!
+
+  node: Taxonomy
+}
+
+enum TaxonomySourceEnum {
+  UNIFIED
+
+  FRANCEBLEU
+}
+
+enum TaxonomyTypeEnum {
+  THEME
+
+  TAG
+}
+
+"""
+ A Track represents an audio track.
+"""
+type Track {
+  """
+   Track's ID
+  """
+  id: ID!
+
+  """
+   Track's title
+  """
+  title: String!
+
+  """
+   Track's album title
+  """
+  albumTitle: String
+
+  """
+   Track's artists
+  """
+  label: String
+
+  """
+   Track's main artists
+  """
+  mainArtists: [String]
+
+  """
+   Track's authors
+  """
+  authors: [String]
+
+  """
+   Track's composers
+  """
+  composers: [String]
+
+  """
+   Track's performers
+  """
+  performers: [String]
+
+  """
+   Track's production date
+  """
+  productionDate: Int
+
+  """
+   Track's disc Number
+  """
+  discNumber: Int
+
+  """
+   Track's number
+  """
+  trackNumber: Int
+}
+
+"""
+ A transcript is a speech to text representation of a manifestation 
+"""
+type Transcript {
+  """
+   The magnetotheque ID of the transcript 
+  """
+  magnetothequeId: String!
+
+  """
+   The segments associated with the transcript provided by the speech to text service
+  """
+  segments: [Segment]
+
+  """
+   The transcript text without any formatting 
+  """
+  text: String
+}
+
+"""
+ A segment is a part of a whisper transcript 
+"""
+type Segment {
+  """
+   The start time of the segment 
+  """
+  start: Float
+
+  """
+   The text of the segment 
+  """
+  text: String
+
+  """
+   The type of the segment 
+  """
+  type: String
+
+  """
+   The speaker of the segment 
+  """
+  speaker: String
+}
+
+"""
+The `Float` scalar type represents signed double-precision fractional values as specified by [IEEE 754](https://en.wikipedia.org/wiki/IEEE_floating_point).
+"""
+scalar Float
+
+"""
+A GraphQL Schema defines the capabilities of a GraphQL server. It exposes all available types and directives on the server, as well as the entry points for query, mutation, and subscription operations.
+"""
+type __Schema {
+  description: String
+
+  """
+  A list of all types supported by this server.
+  """
+  types: [__Type!]!
+
+  """
+  The type that query operations will be rooted at.
+  """
+  queryType: __Type!
+
+  """
+  If this server supports mutation, the type that mutation operations will be rooted at.
+  """
+  mutationType: __Type
+
+  """
+  If this server support subscription, the type that subscription operations will be rooted at.
+  """
+  subscriptionType: __Type
+
+  """
+  A list of all directives supported by this server.
+  """
+  directives: [__Directive!]!
+}
+
+"""
+The fundamental unit of any GraphQL Schema is the type. There are many kinds of types in GraphQL as represented by the `__TypeKind` enum.
+
+Depending on the kind of a type, certain fields describe information about that type. Scalar types provide no information beyond a name, description and optional `specifiedByURL`, while Enum types provide their values. Object and Interface types provide the fields they describe. Abstract types, Union and Interface, provide the Object types possible at runtime. List and NonNull types compose other types.
+"""
+type __Type {
+  kind: __TypeKind!
+
+  name: String
+
+  description: String
+
+  specifiedByURL: String
+
+  fields(includeDeprecated: Boolean = false): [__Field!]
+
+  interfaces: [__Type!]
+
+  possibleTypes: [__Type!]
+
+  enumValues(includeDeprecated: Boolean = false): [__EnumValue!]
+
+  inputFields(includeDeprecated: Boolean = false): [__InputValue!]
+
+  ofType: __Type
+
+  isOneOf: Boolean
+}
+
+"""
+An enum describing what kind of type a given `__Type` is.
+"""
+enum __TypeKind {
+  """
+  Indicates this type is a scalar.
+  """
+  SCALAR
+
+  """
+  Indicates this type is an object. `fields` and `interfaces` are valid fields.
+  """
+  OBJECT
+
+  """
+  Indicates this type is an interface. `fields`, `interfaces`, and `possibleTypes` are valid fields.
+  """
+  INTERFACE
+
+  """
+  Indicates this type is a union. `possibleTypes` is a valid field.
+  """
+  UNION
+
+  """
+  Indicates this type is an enum. `enumValues` is a valid field.
+  """
+  ENUM
+
+  """
+  Indicates this type is an input object. `inputFields` is a valid field.
+  """
+  INPUT_OBJECT
+
+  """
+  Indicates this type is a list. `ofType` is a valid field.
+  """
+  LIST
+
+  """
+  Indicates this type is a non-null. `ofType` is a valid field.
+  """
+  NON_NULL
+}
+
+"""
+Object and Interface types are described by a list of Fields, each of which has a name, potentially a list of arguments, and a return type.
+"""
+type __Field {
+  name: String!
+
+  description: String
+
+  args(includeDeprecated: Boolean = false): [__InputValue!]!
+
+  type: __Type!
+
+  isDeprecated: Boolean!
+
+  deprecationReason: String
+}
+
+"""
+Arguments provided to Fields or Directives and the input fields of an InputObject are represented as Input Values which describe their type and optionally a default value.
+"""
+type __InputValue {
+  name: String!
+
+  description: String
+
+  type: __Type!
+
+  """
+  A GraphQL-formatted string representing the default value for this input value.
+  """
+  defaultValue: String
+
+  isDeprecated: Boolean!
+
+  deprecationReason: String
+}
+
+"""
+One possible value for a given Enum. Enum values are unique values, not a placeholder for a string or numeric value. However an Enum value is returned in a JSON response as a string.
+"""
+type __EnumValue {
+  name: String!
+
+  description: String
+
+  isDeprecated: Boolean!
+
+  deprecationReason: String
+}
+
+"""
+A Directive provides a way to describe alternate runtime execution and type validation behavior in a GraphQL document.
+
+In some cases, you need to provide options to alter GraphQL's execution behavior in ways field arguments will not suffice, such as conditionally including or skipping a field. Directives provide this by describing additional information to the executor.
+"""
+type __Directive {
+  name: String!
+
+  description: String
+
+  isRepeatable: Boolean!
+
+  locations: [__DirectiveLocation!]!
+
+  args(includeDeprecated: Boolean = false): [__InputValue!]!
+}
+
+"""
+A Directive can be adjacent to many parts of the GraphQL language, a __DirectiveLocation describes one such possible adjacencies.
+"""
+enum __DirectiveLocation {
+  """
+  Location adjacent to a query operation.
+  """
+  QUERY
+
+  """
+  Location adjacent to a mutation operation.
+  """
+  MUTATION
+
+  """
+  Location adjacent to a subscription operation.
+  """
+  SUBSCRIPTION
+
+  """
+  Location adjacent to a field.
+  """
+  FIELD
+
+  """
+  Location adjacent to a fragment definition.
+  """
+  FRAGMENT_DEFINITION
+
+  """
+  Location adjacent to a fragment spread.
+  """
+  FRAGMENT_SPREAD
+
+  """
+  Location adjacent to an inline fragment.
+  """
+  INLINE_FRAGMENT
+
+  """
+  Location adjacent to a variable definition.
+  """
+  VARIABLE_DEFINITION
+
+  """
+  Location adjacent to a schema definition.
+  """
+  SCHEMA
+
+  """
+  Location adjacent to a scalar definition.
+  """
+  SCALAR
+
+  """
+  Location adjacent to an object type definition.
+  """
+  OBJECT
+
+  """
+  Location adjacent to a field definition.
+  """
+  FIELD_DEFINITION
+
+  """
+  Location adjacent to an argument definition.
+  """
+  ARGUMENT_DEFINITION
+
+  """
+  Location adjacent to an interface definition.
+  """
+  INTERFACE
+
+  """
+  Location adjacent to a union definition.
+  """
+  UNION
+
+  """
+  Location adjacent to an enum definition.
+  """
+  ENUM
+
+  """
+  Location adjacent to an enum value definition.
+  """
+  ENUM_VALUE
+
+  """
+  Location adjacent to an input object type definition.
+  """
+  INPUT_OBJECT
+
+  """
+  Location adjacent to an input object field definition.
+  """
+  INPUT_FIELD_DEFINITION
+}
+
+"""
+Directs the executor to include this field or fragment only when the `if` argument is true.
+"""
+directive @include("Included when true." if: Boolean!) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
+
+"""
+Directs the executor to skip this field or fragment when the `if` argument is true.
+"""
+directive @skip("Skipped when true." if: Boolean!) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
+
+"""
+Marks an element of a GraphQL schema as no longer supported.
+"""
+directive @deprecated("Explains why this element was deprecated, usually also including a suggestion for how to access supported similar data. Formatted using the Markdown syntax, as specified by [CommonMark](https://commonmark.org/)." reason: String = "No longer supported") on FIELD_DEFINITION | ARGUMENT_DEFINITION | INPUT_FIELD_DEFINITION | ENUM_VALUE
+
+"""
+Exposes a URL that specifies the behavior of this scalar.
+"""
+directive @specifiedBy("The URL that specifies the behavior of this scalar." url: String!) on SCALAR
+
+"""
+Indicates exactly one field must be supplied and this field must not be `null`.
+"""
+directive @oneOf on INPUT_OBJECT
+
+schema {
+  query: Query
+}
+
