@@ -23,10 +23,9 @@ fun App() {
     RadioFranceTheme {
         Scaffold(
             topBar = { TopAppBar(title = { Text(stringResource(Res.string.app_title)) }) },
-            // Mini-player slot, filled in step 5. It will get the same
-            // StationsViewModel instance through koinViewModel(): no state passes
-            // through App.
-            bottomBar = {}
+            // Gets the same StationsViewModel instance through koinViewModel():
+            // no state passes through App. Collapses when nothing is playing.
+            bottomBar = { MiniPlayer() }
         ) { innerPadding ->
             // Padding, not contentPadding: the sticky section headers must stick
             // under the top bar, not behind it.

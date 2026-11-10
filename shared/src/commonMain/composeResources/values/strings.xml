@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_title">Radio France</string>
+
+    <!-- Mini-player button (content descriptions) -->
+    <string name="action_play">Lecture</string>
+    <string name="action_pause">Pause</string>
 </resources>

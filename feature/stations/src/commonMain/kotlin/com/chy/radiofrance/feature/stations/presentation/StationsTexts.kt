@@ -56,8 +56,11 @@ internal fun headerText(header: SectionHeader): String = when (header) {
     is SectionHeader.Locals -> stringResource(headerResource(header), header.brandName)
 }
 
-/** Spoken state of a row (screen readers) and the mini-player label. Null when idle. */
-internal fun playerStateResource(state: PlayerState): StringResource? = when (state) {
+/**
+ * Spoken state of a row (screen readers) and the mini-player status line. Null when
+ * idle. Public for the shell's mini-player: only the StringResource leaves the module.
+ */
+fun playerStateResource(state: PlayerState): StringResource? = when (state) {
     PlayerState.Idle -> null
     is PlayerState.Buffering -> Res.string.player_buffering
     is PlayerState.Playing -> Res.string.player_playing
@@ -65,8 +68,8 @@ internal fun playerStateResource(state: PlayerState): StringResource? = when (st
     is PlayerState.Error -> Res.string.player_error
 }
 
-/** Why playback failed, in words. Used by the mini-player (step 5). */
-internal fun playbackErrorResource(error: PlaybackError): StringResource = when (error) {
+/** Why playback failed, in words. Public for the shell's mini-player. */
+fun playbackErrorResource(error: PlaybackError): StringResource = when (error) {
     PlaybackError.Network -> Res.string.playback_error_network
     PlaybackError.StreamUnavailable -> Res.string.playback_error_stream_unavailable
     PlaybackError.NotSupported -> Res.string.playback_error_not_supported
