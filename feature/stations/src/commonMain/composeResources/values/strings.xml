@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Default language: French (the app is for Radio France listeners).
+     Typographic apostrophes (’) avoid any escaping question. -->
+<resources>
+    <!-- List -->
+    <string name="loading">Chargement des stations</string>
+    <string name="empty_message">Aucune station disponible pour le moment.</string>
+    <string name="action_refresh">Actualiser</string>
+    <string name="action_retry">Réessayer</string>
+    <string name="refresh_failed_title">La liste n’a pas pu être actualisée</string>
+
+    <!-- Section headers -->
+    <string name="header_stations">Stations</string>
+    <string name="header_webradios">Webradios %1$s</string>
+    <string name="header_locals">Radios locales %1$s</string>
+
+    <!-- Data errors -->
+    <string name="error_missing_api_key">Clé d’API absente. Ajoutez RADIOFRANCE_API_KEY dans local.properties, puis recompilez l’application.</string>
+    <string name="error_invalid_api_key">La clé d’API a été refusée par Radio France.</string>
+    <string name="error_quota_exceeded">Le quota quotidien de l’API est atteint. Réessayez demain.</string>
+    <string name="error_network">Pas de connexion internet.</string>
+    <string name="error_server">Le service Radio France est indisponible pour le moment.</string>
+
+    <!-- Player states (row state description, mini-player) -->
+    <string name="player_buffering">Chargement</string>
+    <string name="player_playing">En lecture</string>
+    <string name="player_paused">En pause</string>
+    <string name="player_error">Lecture impossible</string>
+
+    <!-- Playback errors -->
+    <string name="playback_error_network">La connexion au flux a été perdue.</string>
+    <string name="playback_error_stream_unavailable">Ce flux est indisponible.</string>
+    <string name="playback_error_not_supported">La lecture n’est pas encore disponible sur cet appareil.</string>
+</resources>
