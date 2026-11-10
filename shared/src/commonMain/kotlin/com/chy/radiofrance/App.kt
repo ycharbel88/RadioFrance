@@ -1,52 +1,36 @@
 package com.chy.radiofrance
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.safeContentPadding
-import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import org.jetbrains.compose.resources.painterResource
+import com.chy.radiofrance.core.designsystem.RadioFranceTheme
+import com.chy.radiofrance.feature.stations.presentation.StationsScreen
+import org.jetbrains.compose.resources.stringResource
 import radiofrance.shared.generated.resources.Res
-import radiofrance.shared.generated.resources.compose_multiplatform
+import radiofrance.shared.generated.resources.app_title
 
+/**
+ * The app shell, shown by MainActivity on Android and MainViewController on iOS.
+ * One screen today; this is where navigation would go when a second one comes.
+ */
+@OptIn(ExperimentalMaterial3Api::class) // TopAppBar is still experimental in Material 3.
 @Composable
-@Preview
 fun App() {
-    MaterialTheme {
-        var showContent by remember { mutableStateOf(false) }
-        Column(
-            modifier = Modifier
-                .background(MaterialTheme.colorScheme.primaryContainer)
-                .safeContentPadding()
-                .fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Button(onClick = { showContent = !showContent }) {
-                Text("Click me!")
-            }
-            AnimatedVisibility(showContent) {
-                val greeting = remember { Greeting().greet() }
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Image(painterResource(Res.drawable.compose_multiplatform), null)
-                    Text("Compose: $greeting")
-                }
-            }
+    RadioFranceTheme {
+        Scaffold(
+            topBar = { TopAppBar(title = { Text(stringResource(Res.string.app_title)) }) },
+            // Mini-player slot, filled in step 5. It will get the same
+            // StationsViewModel instance through koinViewModel(): no state passes
+            // through App.
+            bottomBar = {}
+        ) { innerPadding ->
+            // Padding, not contentPadding: the sticky section headers must stick
+            // under the top bar, not behind it.
+            StationsScreen(modifier = Modifier.padding(innerPadding))
         }
     }
 }
