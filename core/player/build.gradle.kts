@@ -37,6 +37,15 @@ kotlin {
             api(projects.core.model)
             api(libs.kotlinx.coroutines.core)
         }
+        // Android player: Media3 runs ExoPlayer inside a MediaSessionService, and the
+        // app talks to it through a MediaController. None of these types leave the module.
+        androidMain.dependencies {
+            implementation(libs.androidx.media3.exoplayer)
+            implementation(libs.androidx.media3.session)
+            implementation(libs.kotlinx.coroutines.guava)
+            // androidContext() in the Android Koin module.
+            implementation(libs.koin.android)
+        }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
         }
