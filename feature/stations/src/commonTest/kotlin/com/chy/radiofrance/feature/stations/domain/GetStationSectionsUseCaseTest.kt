@@ -6,6 +6,7 @@ import com.chy.radiofrance.core.model.Station
 import com.chy.radiofrance.core.model.StationKind.LOCAL
 import com.chy.radiofrance.core.model.StationKind.NATIONAL
 import com.chy.radiofrance.core.model.StationKind.WEBRADIO
+import com.chy.radiofrance.feature.stations.FakeStationsRepository
 import com.chy.radiofrance.feature.stations.station
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -13,16 +14,6 @@ import kotlin.test.assertIs
 import kotlinx.coroutines.test.runTest
 
 class GetStationSectionsUseCaseTest {
-    private class FakeStationsRepository(private val result: DataResult<List<Station>>) :
-        StationsRepository {
-        val forceRefreshCalls = mutableListOf<Boolean>()
-
-        override suspend fun stations(forceRefresh: Boolean): DataResult<List<Station>> {
-            forceRefreshCalls += forceRefresh
-            return result
-        }
-    }
-
     // Same shape as the API: each brand, then its webradios, then its locals.
     private val inter = station("FRANCEINTER", NATIONAL, "FRANCEINTER", "France Inter")
     private val interMusic =

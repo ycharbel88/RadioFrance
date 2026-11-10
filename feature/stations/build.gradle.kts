@@ -35,12 +35,18 @@ kotlin {
             // feature:* depends on core:* only, never on another feature.
             implementation(projects.core.model)
             implementation(projects.core.network)
+            // `api`: StationsUiState exposes PlayerState to the shell's mini-player.
+            api(projects.core.player)
             implementation(projects.core.designsystem)
             implementation(libs.compose.runtime)
+            // Multiplatform androidx ViewModel (viewModelScope = main thread on iOS too).
+            implementation(libs.androidx.lifecycle.viewmodel)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
             implementation(libs.kotlinx.coroutines.test)
+            implementation(libs.turbine)
+            implementation(projects.core.testing)
         }
     }
 }
