@@ -2,6 +2,13 @@
 <!-- Default language: French (the app is for Radio France listeners).
      Typographic apostrophes (’) avoid any escaping question. -->
 <resources>
+    <!-- Top bar -->
+    <string name="app_title">Radio France</string>
+    <plurals name="stations_live">
+        <item quantity="one">%1$d station en direct</item>
+        <item quantity="other">%1$d stations en direct</item>
+    </plurals>
+
     <!-- List -->
     <string name="loading">Chargement des stations</string>
     <string name="empty_message">Aucune station disponible pour le moment.</string>
@@ -13,6 +20,21 @@
     <string name="header_stations">Stations</string>
     <string name="header_webradios">Webradios %1$s</string>
     <string name="header_locals">Radios locales %1$s</string>
+
+    <!-- Rows and cards -->
+    <string name="live_chip">DIRECT</string>
+    <string name="subtitle_webradio">Webradio · %1$s</string>
+    <string name="subtitle_local">Radio locale · %1$s</string>
+
+    <!-- Local radios toggle -->
+    <plurals name="locals_count">
+        <item quantity="one">%1$s · %2$d radio locale</item>
+        <item quantity="other">%1$s · %2$d radios locales</item>
+    </plurals>
+    <string name="action_show">Afficher</string>
+    <string name="action_hide">Masquer</string>
+    <string name="state_expanded">développé</string>
+    <string name="state_collapsed">réduit</string>
 
     <!-- Data errors -->
     <string name="error_missing_api_key">Clé d’API absente. Ajoutez RADIOFRANCE_API_KEY dans local.properties, puis recompilez l’application.</string>

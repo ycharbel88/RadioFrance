@@ -23,6 +23,10 @@ data class StationsUiState(
 ) {
     /** Id of the station the player is about (playing, paused, failed...), to highlight its row. */
     val currentStationId: String? get() = player.station?.id
+
+    /** How many stations the list holds ("77 stations en direct"), or null while there is no list. */
+    val stationCount: Int?
+        get() = (content as? StationsContent.Loaded)?.sections?.sumOf { it.stations.size }
 }
 
 /** The four ways the list area can look. */

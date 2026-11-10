@@ -2,6 +2,7 @@ package com.chy.radiofrance.feature.stations.presentation
 
 import androidx.compose.runtime.Composable
 import com.chy.radiofrance.core.model.DataError
+import com.chy.radiofrance.core.model.StationKind
 import com.chy.radiofrance.core.player.PlaybackError
 import com.chy.radiofrance.core.player.PlayerState
 import com.chy.radiofrance.feature.stations.domain.SectionHeader
@@ -21,6 +22,8 @@ import com.chy.radiofrance.feature.stations.resources.player_buffering
 import com.chy.radiofrance.feature.stations.resources.player_error
 import com.chy.radiofrance.feature.stations.resources.player_paused
 import com.chy.radiofrance.feature.stations.resources.player_playing
+import com.chy.radiofrance.feature.stations.resources.subtitle_local
+import com.chy.radiofrance.feature.stations.resources.subtitle_webradio
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -73,4 +76,14 @@ fun playbackErrorResource(error: PlaybackError): StringResource = when (error) {
     PlaybackError.Network -> Res.string.playback_error_network
     PlaybackError.StreamUnavailable -> Res.string.playback_error_stream_unavailable
     PlaybackError.NotSupported -> Res.string.playback_error_not_supported
+}
+
+/**
+ * The second line of a compact row ("Webradio · FIP"), taking the brand name as
+ * argument. Null for a national station: its card shows the brand itself.
+ */
+internal fun subtitleResource(kind: StationKind): StringResource? = when (kind) {
+    StationKind.NATIONAL -> null
+    StationKind.WEBRADIO -> Res.string.subtitle_webradio
+    StationKind.LOCAL -> Res.string.subtitle_local
 }
