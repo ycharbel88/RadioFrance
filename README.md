@@ -22,11 +22,11 @@ core:testing ──► core:player   (test doubles; only ever a commonTest depen
 |---|---|
 | `androidApp` | Android application: `Application` (starts Koin), `MainActivity`, later the Media3 service. |
 | `shared` | App shell: wires every module, holds the root composable, and is **the only iOS framework**. |
-| `feature:stations` | Station list: `domain/` (repository interface, `GetStationSectionsUseCase`), `data/` (repository), `presentation/` (`StationsViewModel`, `StationsUiState`, `StationsEvent`). |
+| `feature:stations` | Station list: `domain/` (repository interface, `GetStationSectionsUseCase`), `data/` (repository), `presentation/` (`StationsViewModel`, `StationsUiState`, `StationsEvent`, `StationsScreen`, `StationItem`, strings and icons). |
 | `core:model` | Domain types (`Station`, `DataError`, `DataResult`), no dependencies. |
 | `core:network` | Apollo client, API key, `StationsRemoteDataSource`. No Apollo type leaves this module. |
 | `core:player` | `AudioPlayer` interface and `PlayerState`. No UI. Default binding: `UnavailableAudioPlayer` (see below). |
-| `core:designsystem` | Theme and shared composables. |
+| `core:designsystem` | `RadioFranceTheme` (Material 3 light/dark; brand colours come later) and shared composables. |
 | `core:testing` | Test doubles shared across modules (`FakeAudioPlayer`). Only ever a `commonTest` dependency: KMP has no `testFixtures`. |
 
 Rules: `feature:*` depends only on `core:*`. `core:*` never depends on `feature:*`, `shared`
@@ -46,6 +46,23 @@ or `androidApp`. Why each module exists is written at the top of its `build.grad
   default for now.
 - `AppGraphTest` (in `shared`) resolves `StationsViewModel` from the real `appModules`, with
   only the network data source faked.
+
+## UI (Compose Multiplatform, shared by Android and iOS)
+
+- `App()` (in `shared`): theme + `Scaffold` with a top bar, the stations screen, and a
+  bottom slot for the mini-player.
+- `StationsScreen` is the only composable that knows Koin (`koinViewModel()`) and the
+  ViewModel. It collects the state with `collectAsStateWithLifecycle()` and hands it to the
+  stateless `StationsScreenContent`, which the previews call directly.
+- States: loading, empty, error, and a sectioned list (sticky headers, keys = station ids)
+  with pull-to-refresh. A failed refresh keeps the list and shows a banner above it.
+- Each `DataError` has its own message. "Retry" appears only when it can help (network or
+  server error), never for a missing or refused API key or the daily quota.
+  `StationsTexts.kt` holds these rules and is unit-tested.
+- The UI is in French (`composeResources/values/strings.xml`). Another language is one more
+  `values-xx` folder, with no code change.
+- Previews: one per state, light and dark, in `StationsPreviews.kt`. Open them in Android
+  Studio from the commonMain file.
 
 ## API key
 
