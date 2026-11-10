@@ -32,6 +32,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(libs.koin.core)
+            implementation(libs.koin.core.viewmodel)
             // feature:* depends on core:* only, never on another feature.
             implementation(projects.core.model)
             implementation(projects.core.network)
@@ -47,6 +48,10 @@ kotlin {
             implementation(libs.kotlinx.coroutines.test)
             implementation(libs.turbine)
             implementation(projects.core.testing)
+        }
+        // JVM-only tests: Koin's `verify()` uses reflection, which iOS doesn't have.
+        getByName("androidHostTest").dependencies {
+            implementation(libs.koin.test)
         }
     }
 }
