@@ -23,6 +23,11 @@ kotlin {
         compilerOptions {
             jvmTarget = JvmTarget.JVM_11
         }
+        // Compose resources (strings, icons) are packaged as Android assets: the
+        // Android-KMP library plugin only does that when resources are enabled.
+        androidResources {
+            enable = true
+        }
         // Runs commonTest on the JVM: `:feature:stations:testAndroidHostTest`.
         withHostTest { }
     }
@@ -39,9 +44,17 @@ kotlin {
             // `api`: StationsUiState exposes PlayerState to the shell's mini-player.
             api(projects.core.player)
             implementation(projects.core.designsystem)
-            implementation(libs.compose.runtime)
             // Multiplatform androidx ViewModel (viewModelScope = main thread on iOS too).
             implementation(libs.androidx.lifecycle.viewmodel)
+            implementation(libs.androidx.lifecycle.runtimeCompose)
+            implementation(libs.koin.compose.viewmodel)
+
+            implementation(libs.compose.runtime)
+            implementation(libs.compose.foundation)
+            implementation(libs.compose.material3)
+            implementation(libs.compose.ui)
+            implementation(libs.compose.components.resources)
+            implementation(libs.compose.uiToolingPreview)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -54,6 +67,16 @@ kotlin {
             implementation(libs.koin.test)
         }
     }
+}
+
+// Lets Android Studio render the commonMain @Previews.
+dependencies {
+    androidRuntimeClasspath(libs.compose.uiTooling)
+}
+
+// The generated `Res` class stays internal (default): no resource type leaves the module.
+compose.resources {
+    packageOfResClass = "com.chy.radiofrance.feature.stations.resources"
 }
 
 ktlint {
