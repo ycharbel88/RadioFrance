@@ -7,8 +7,9 @@ starts playback. Android and iOS share the UI through Compose Multiplatform.
 
 ```
 androidApp ──► shared ──► feature:stations ──► core:designsystem
- (Android        │                        └──► core:model
-  app shell)     ├──► core:network ──► core:model
+ (Android        │                        ├──► core:network
+  app shell)     │                        └──► core:model
+                 ├──► core:network ──► core:model
                  ├──► core:player  ──► core:model
                  └──► core:designsystem, core:model
 iosApp (Xcode) ──► Shared.framework (built from `shared`)
@@ -18,9 +19,9 @@ iosApp (Xcode) ──► Shared.framework (built from `shared`)
 |---|---|
 | `androidApp` | Android application: `Application` (starts Koin), `MainActivity`, later the Media3 service. |
 | `shared` | App shell: wires every module, holds the root composable, and is **the only iOS framework**. |
-| `feature:stations` | Station list screen and its ViewModel. |
-| `core:model` | Domain types, no dependencies. |
-| `core:network` | GraphQL client and API key. No Apollo/Ktor type leaves this module. |
+| `feature:stations` | Station list: `domain/` (repository interface, `GetStationSectionsUseCase`), `data/` (repository), `presentation/` (step 3). |
+| `core:model` | Domain types (`Station`, `DataError`, `DataResult`), no dependencies. |
+| `core:network` | Apollo client, API key, `StationsRemoteDataSource`. No Apollo type leaves this module. |
 | `core:player` | `AudioPlayer` interface plus platform implementations. No UI. |
 | `core:designsystem` | Theme and shared composables. |
 
@@ -32,17 +33,33 @@ or `androidApp`. Why each module exists is written at the top of its `build.grad
 Add the key to `local.properties`, which is never committed:
 
 ```properties
-RADIOFRANCE_API_KEY=your-key
+RADIOFRANCE_API_KEY=12345678-1234-1234-1234-123456789abc
 ```
 
-The build works without it (that's how CI runs). The key then defaults to an empty string,
-and the app reports the missing key at runtime.
+No quotes: `local.properties` keeps them as part of the value, and the API answers 403.
+The build strips them anyway, then fails with a clear message if the value is not a UUID.
+The build works without a key (that's how CI runs). The app then reports
+`DataError.MissingApiKey` at runtime, without calling the API.
+
+The key is sent as the `X-Token` header. The API allows 1000 requests per day.
+
+## GraphQL schema
+
+`core/network/src/commonMain/graphql/schema.graphqls` is committed. Refresh it by hand only
+when needed (it costs 1 request):
+
+```sh
+./gradlew :core:network:downloadRadiofranceApolloSchemaFromIntrospection
+```
+
+Queries may use only fields present in that file.
 
 ## Build and checks
 
 ```sh
 ./gradlew :androidApp:assembleDebug        # Android app
-./gradlew :shared:testAndroidHostTest      # unit tests (JVM)
+./gradlew :shared:testAndroidHostTest :core:network:testAndroidHostTest \
+          :feature:stations:testAndroidHostTest   # unit tests (JVM, no network)
 ./gradlew ktlintCheck                      # lint (ktlintFormat to fix)
 ./gradlew :shared:compileKotlinIosSimulatorArm64   # iOS Kotlin compile, works on Windows/Linux too
 ```
@@ -51,7 +68,7 @@ To build the iOS app you need a Mac: open `iosApp/iosApp.xcodeproj` in Xcode 26.
 
 ## CI (GitHub Actions)
 
-- **android** (ubuntu): `:androidApp:assembleDebug :shared:testAndroidHostTest ktlintCheck`
+- **android** (ubuntu): `:androidApp:assembleDebug`, the three `testAndroidHostTest` tasks, `ktlintCheck`
 - **ios** (macos-26, Xcode 26.4 pinned): `:shared:linkDebugFrameworkIosSimulatorArm64`, then
   `xcodebuild` of `iosApp` for the arm64 simulator, without code signing.
 
