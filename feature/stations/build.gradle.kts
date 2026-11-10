@@ -23,6 +23,8 @@ kotlin {
         compilerOptions {
             jvmTarget = JvmTarget.JVM_11
         }
+        // Runs commonTest on the JVM: `:feature:stations:testAndroidHostTest`.
+        withHostTest { }
     }
     iosArm64()
     iosSimulatorArm64()
@@ -32,8 +34,13 @@ kotlin {
             implementation(libs.koin.core)
             // feature:* depends on core:* only, never on another feature.
             implementation(projects.core.model)
+            implementation(projects.core.network)
             implementation(projects.core.designsystem)
             implementation(libs.compose.runtime)
+        }
+        commonTest.dependencies {
+            implementation(libs.kotlin.test)
+            implementation(libs.kotlinx.coroutines.test)
         }
     }
 }
