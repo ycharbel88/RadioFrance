@@ -20,13 +20,13 @@ core:testing ──► core:player   (test doubles; only ever a commonTest depen
 
 | Module | Role |
 |---|---|
-| `androidApp` | Android application: `Application` (starts Koin), `MainActivity`, later the Media3 service. |
-| `shared` | App shell: wires every module, holds the root composable, and is **the only iOS framework**. |
+| `androidApp` | Android application: `Application` (starts Koin with the Android modules), `MainActivity`. |
+| `shared` | App shell: wires every module, holds the root composable and the mini-player, and is **the only iOS framework**. |
 | `feature:stations` | Station list: `domain/` (repository interface, `GetStationSectionsUseCase`), `data/` (repository), `presentation/` (`StationsViewModel`, `StationsUiState`, `StationsEvent`, `StationsScreen`, `StationItem`, strings and icons). |
 | `core:model` | Domain types (`Station`, `DataError`, `DataResult`), no dependencies. |
 | `core:network` | Apollo client, API key, `StationsRemoteDataSource`. No Apollo type leaves this module. |
-| `core:player` | `AudioPlayer` interface and `PlayerState`. No UI. Default binding: `UnavailableAudioPlayer` (see below). |
-| `core:designsystem` | `RadioFranceTheme` (Material 3 light/dark; brand colours come later) and shared composables. |
+| `core:player` | `AudioPlayer` interface and `PlayerState`. No UI. Default binding: `UnavailableAudioPlayer`; Android: Media3 `PlaybackService` + `MediaControllerAudioPlayer` (see below). |
+| `core:designsystem` | `RadioFranceTheme` (Material 3 light/dark; brand colours come later), `RadioFranceIcons`. |
 | `core:testing` | Test doubles shared across modules (`FakeAudioPlayer`). Only ever a `commonTest` dependency: KMP has no `testFixtures`. |
 
 Rules: `feature:*` depends only on `core:*`. `core:*` never depends on `feature:*`, `shared`
@@ -42,15 +42,39 @@ or `androidApp`. Why each module exists is written at the top of its `build.grad
 - `playerModule` binds `UnavailableAudioPlayer` by default, so the Koin graph is complete on
   every platform at every step. It answers every `play` with
   `PlayerState.Error(station, PlaybackError.NotSupported)`. A platform with a real player
-  overrides the binding from a module loaded after it (Android: Media3). iOS keeps the
-  default for now.
+  overrides the binding from a module loaded after it: `initKoin(platformModules)` loads
+  them after the common ones. Android passes `androidPlayerModule`; iOS keeps the default.
 - `AppGraphTest` (in `shared`) resolves `StationsViewModel` from the real `appModules`, with
   only the network data source faked.
 
+## Android player (Media3)
+
+- `PlaybackService` (a `MediaSessionService`, in `core:player` androidMain) owns the
+  `ExoPlayer` and the `MediaSession`. Media3 turns that into the media notification, lock
+  screen controls, headset/Bluetooth buttons and playback that survives the Activity.
+  ExoPlayer handles audio focus and "becoming noisy" (headphones unplugged) itself.
+- Live radio: the session plays through `LivePlayer`, a `ForwardingPlayer` whose `play()`
+  reconnects to the live edge after a pause, a stop or an error. Resuming from the app,
+  the notification, the lock screen or a headset button never plays a stale buffer.
+- `MediaControllerAudioPlayer` is the app side: a `MediaController` connected
+  asynchronously (commands sent before the connection are queued in order), mapping
+  the player's events to `PlayerState`. Application context only.
+- Swiping the app away keeps the radio playing; if nothing is playing, the service stops.
+- `POST_NOTIFICATIONS` is neither declared nor requested: media session notifications
+  are exempt from it (Android 13+ notification permission docs).
+- The service and the controller are checked on a device, not by unit tests. The
+  state mapping and the live-edge rule are pure functions, tested on the JVM.
+- Debug builds log every player event, plus load starts/cancels, under the logcat tag
+  `EventLogger`. A resume that reconnects shows `loadCanceled` then `loadStarted` with
+  a new task id.
+
+iOS: no player yet. Tapping a station shows "not supported" in the mini-player.
+
 ## UI (Compose Multiplatform, shared by Android and iOS)
 
-- `App()` (in `shared`): theme + `Scaffold` with a top bar, the stations screen, and a
-  bottom slot for the mini-player.
+- `App()` (in `shared`): theme + `Scaffold` with a top bar, the stations screen, and the
+  mini-player at the bottom (hidden when nothing is loaded; play/pause, or retry after an
+  error).
 - `StationsScreen` is the only composable that knows Koin (`koinViewModel()`) and the
   ViewModel. It collects the state with `collectAsStateWithLifecycle()` and hands it to the
   stateless `StationsScreenContent`, which the previews call directly.
