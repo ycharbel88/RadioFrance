@@ -32,7 +32,7 @@ jobs:
 
       # No local.properties in CI, so RADIOFRANCE_API_KEY is "": the build must still pass.
       - name: Build, unit tests, ktlint
-        run: ./gradlew :androidApp:assembleDebug :shared:testAndroidHostTest :core:player:testAndroidHostTest :core:network:testAndroidHostTest :feature:stations:testAndroidHostTest ktlintCheck
+        run: ./gradlew :androidApp:assembleDebug :shared:testAndroidHostTest :core:player:testAndroidHostTest :core:network:testAndroidHostTest :core:designsystem:testAndroidHostTest :feature:stations:testAndroidHostTest ktlintCheck
 
   ios:
     name: iOS (framework link + xcodebuild, simulator)

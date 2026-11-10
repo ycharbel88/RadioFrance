@@ -28,6 +28,8 @@ kotlin {
         androidResources {
             enable = true
         }
+        // Runs commonTest on the JVM: `:core:designsystem:testAndroidHostTest`.
+        withHostTest { }
     }
     iosArm64()
     iosSimulatorArm64()
@@ -40,6 +42,9 @@ kotlin {
             api(libs.compose.material3)
             // `api`: RadioFranceIcons exposes DrawableResource values.
             api(libs.compose.components.resources)
+        }
+        commonTest.dependencies {
+            implementation(libs.kotlin.test)
         }
     }
 }

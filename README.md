@@ -122,7 +122,7 @@ Queries may use only fields present in that file.
 ```sh
 ./gradlew :androidApp:assembleDebug        # Android app
 ./gradlew :shared:testAndroidHostTest :core:player:testAndroidHostTest \
-          :core:network:testAndroidHostTest \
+          :core:network:testAndroidHostTest :core:designsystem:testAndroidHostTest \
           :feature:stations:testAndroidHostTest   # unit tests (JVM, no network)
 ./gradlew ktlintCheck                      # lint (ktlintFormat to fix)
 ./gradlew :shared:compileKotlinIosSimulatorArm64   # iOS Kotlin compile, works on Windows/Linux too
@@ -132,7 +132,7 @@ To build the iOS app you need a Mac: open `iosApp/iosApp.xcodeproj` in Xcode 26.
 
 ## CI (GitHub Actions)
 
-- **android** (ubuntu): `:androidApp:assembleDebug`, the four `testAndroidHostTest` tasks, `ktlintCheck`
+- **android** (ubuntu): `:androidApp:assembleDebug`, the five `testAndroidHostTest` tasks, `ktlintCheck`
 - **ios** (macos-26, Xcode 26.4 pinned): `:shared:linkDebugFrameworkIosSimulatorArm64`, then
   `xcodebuild` of `iosApp` for the arm64 simulator, without code signing.
 
