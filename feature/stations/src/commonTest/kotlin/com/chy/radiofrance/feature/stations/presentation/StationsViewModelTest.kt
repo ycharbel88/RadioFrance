@@ -240,40 +240,6 @@ class StationsViewModelTest {
     }
 
     @Test
-    fun `clicking the station already playing or buffering does not restart it`() = runTest {
-        val viewModel = viewModel()
-
-        player.emit(PlayerState.Playing(fip))
-        viewModel.onEvent(StationsEvent.StationClicked(fip))
-        player.emit(PlayerState.Buffering(fip))
-        viewModel.onEvent(StationsEvent.StationClicked(fip))
-
-        assertEquals(emptyList(), player.calls)
-    }
-
-    @Test
-    fun `clicking another station switches to it`() = runTest {
-        val viewModel = viewModel()
-        player.emit(PlayerState.Playing(fip))
-
-        viewModel.onEvent(StationsEvent.StationClicked(inter))
-
-        assertEquals(listOf<Call>(Call.Play(inter)), player.calls)
-    }
-
-    @Test
-    fun `clicking a paused or failed station plays it again`() = runTest {
-        val viewModel = viewModel()
-
-        player.emit(PlayerState.Paused(fip))
-        viewModel.onEvent(StationsEvent.StationClicked(fip))
-        player.emit(PlayerState.Error(fip, PlaybackError.Network))
-        viewModel.onEvent(StationsEvent.StationClicked(fip))
-
-        assertEquals(listOf<Call>(Call.Play(fip), Call.Play(fip)), player.calls)
-    }
-
-    @Test
     fun `every player state reaches the ui state`() = runTest {
         val viewModel = viewModel()
         val states = listOf(
@@ -295,36 +261,48 @@ class StationsViewModelTest {
         }
     }
 
+    /**
+     * Every player state x every player event -> the command sent to the player.
+     * Rules: a tap on the station already on (playing or buffering) never restarts
+     * it; another station always switches; toggle pauses what is on and resumes
+     * (play = reconnect to live) what is paused or failed; nothing to toggle when idle.
+     * A NotSupported error still sends play: the mini-player hides its button there.
+     */
     @Test
-    fun `toggle pauses when playing or buffering`() = runTest {
-        val viewModel = viewModel()
+    fun `each player state turns each player event into the right command`() = runTest {
+        val clickSame = StationsEvent.StationClicked(fip)
+        val clickOther = StationsEvent.StationClicked(inter)
+        val toggle = StationsEvent.TogglePlayPause
+        val switch = listOf<Call>(Call.Play(inter))
+        val replay = listOf<Call>(Call.Play(fip))
+        val pause = listOf<Call>(Call.Pause)
+        val nothing = emptyList<Call>()
 
-        player.emit(PlayerState.Playing(fip))
-        viewModel.onEvent(StationsEvent.TogglePlayPause)
-        player.emit(PlayerState.Buffering(fip))
-        viewModel.onEvent(StationsEvent.TogglePlayPause)
+        val table: Map<PlayerState, Map<StationsEvent, List<Call>>> = mapOf(
+            PlayerState.Idle to mapOf(clickSame to replay, clickOther to switch, toggle to nothing),
+            PlayerState.Buffering(fip) to
+                mapOf(clickSame to nothing, clickOther to switch, toggle to pause),
+            PlayerState.Playing(fip) to
+                mapOf(clickSame to nothing, clickOther to switch, toggle to pause),
+            PlayerState.Paused(fip) to
+                mapOf(clickSame to replay, clickOther to switch, toggle to replay),
+            PlayerState.Error(fip, PlaybackError.Network) to
+                mapOf(clickSame to replay, clickOther to switch, toggle to replay),
+            PlayerState.Error(fip, PlaybackError.NotSupported) to
+                mapOf(clickSame to replay, clickOther to switch, toggle to replay)
+        )
 
-        assertEquals(listOf<Call>(Call.Pause, Call.Pause), player.calls)
-    }
+        for ((state, cases) in table) {
+            for ((event, expected) in cases) {
+                // A fresh player per case, so calls from one case don't leak into the next.
+                val fake = FakeAudioPlayer()
+                val viewModel = StationsViewModel(GetStationSectionsUseCase(repository), fake)
+                fake.emit(state)
 
-    @Test
-    fun `toggle resumes the same station when paused or failed`() = runTest {
-        val viewModel = viewModel()
+                viewModel.onEvent(event)
 
-        player.emit(PlayerState.Paused(fip))
-        viewModel.onEvent(StationsEvent.TogglePlayPause)
-        player.emit(PlayerState.Error(fip, PlaybackError.Network))
-        viewModel.onEvent(StationsEvent.TogglePlayPause)
-
-        assertEquals(listOf<Call>(Call.Play(fip), Call.Play(fip)), player.calls)
-    }
-
-    @Test
-    fun `toggle does nothing when idle`() = runTest {
-        val viewModel = viewModel()
-
-        viewModel.onEvent(StationsEvent.TogglePlayPause)
-
-        assertEquals(emptyList(), player.calls)
+                assertEquals(expected, fake.calls, "$state + $event")
+            }
+        }
     }
 }
